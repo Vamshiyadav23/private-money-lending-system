@@ -12,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // Import routes
 const borrowerRoutes = require('./routes/borrowers');
 const loanRoutes = require('./routes/loans');
@@ -21,6 +22,7 @@ const repaymentRoutes = require('./routes/repayments');
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api/repayments', repaymentRoutes);
+app.use('/api/repayments', require('./routes/repayments'));
 
 // Basic route
 app.get('/', (req, res) => {

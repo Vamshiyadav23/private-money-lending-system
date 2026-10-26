@@ -56,15 +56,17 @@ const BorrowerProfile = ({ borrower, loans, repayments, onClose, refreshData }) 
   };
 
   // CORRECTED: Calculate total due including interest
-  const calculateTotalDue = (loan) => {
-    const principal = loan.principal || 0;
-    const interestRate = loan.interestRate || 0;
-    const loanTerm = loan.loanTerm || 6;
-    
-    // Simple interest calculation
-    const interest = principal * (interestRate / 100) * (loanTerm / 12);
-    return principal + interest;
-  };
+  
+const calculateTotalDue = (loan) => {
+  // The backend already calculates the correct total.
+  if (loan.totalDue !== undefined && loan.totalDue !== null) {
+    return Number(loan.totalDue) || 0;
+  }
+
+  // Fallback for older loan records without totalDue.
+  return Number(loan.principal) || 0;
+};
+
 
   // CORRECTED: Enhanced loan status detection with proper completion logic
   const getEnhancedLoanStatus = (loan, repayments = []) => {
@@ -680,10 +682,19 @@ const LoanDetailCard = ({
           <span>Remaining:</span>
           <span>{formatCurrency(remainingBalance)}</span>
         </div>
-        <div className="detail-row">
-          <span>Repayments:</span>
-          <span>{paidRepayments.length} paid, {pendingRepayments.length} pending</span>
-        </div>
+        
+<div className="detail-row">
+  <span>Loan Term:</span>
+  <span>
+    {loan.loanTerm}{' '}
+    {loan.repaymentSchedule === 'daily'
+      ? 'installments (daily)'
+      : loan.repaymentSchedule === 'weekly'
+        ? 'installments (weekly)'
+        : 'installments (monthly)'}
+  </span>
+</div>
+
       </div>
 
       {/* CORRECTED: Progress Bar (capped at 100%) */}

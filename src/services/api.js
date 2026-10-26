@@ -1,108 +1,213 @@
+
+import axios from 'axios';
+
 const API_BASE_URL = 'http://localhost:5000/api';
 
-const apiCall = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  };
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  if (options.body) {
-    config.body = JSON.stringify(options.body);
-  }
+// Handle API errors consistently
+const handleApiError = (error) => {
+  const message =
+    error.response?.data?.message ||
+    error.message ||
+    'Something went wrong. Please try again.';
 
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('API call failed:', error);
-    throw error;
-  }
+  console.error('API Error:', message);
+  throw new Error(message);
 };
 
-// Borrower API calls
+// -----------------------------------------------------
+// BORROWER API
+// -----------------------------------------------------
+
 export const borrowerAPI = {
-  getAll: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiCall(`/borrowers?${params}`);
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get('/borrowers', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   },
-  
-  getById: (id) => apiCall(`/borrowers/${id}`),
-  
-  create: (borrowerData) => 
-    apiCall('/borrowers', {
-      method: 'POST',
-      body: borrowerData,
-    }),
-  
-  update: (id, borrowerData) =>
-    apiCall(`/borrowers/${id}`, {
-      method: 'PUT',
-      body: borrowerData,
-    }),
-  
-  delete: (id) =>
-    apiCall(`/borrowers/${id}`, {
-      method: 'DELETE',
-    }),
+
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/borrowers/${id}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  create: async (borrowerData) => {
+    try {
+      const response = await api.post('/borrowers', borrowerData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  update: async (id, borrowerData) => {
+    try {
+      const response = await api.put(`/borrowers/${id}`, borrowerData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/borrowers/${id}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
 };
 
-// Loan API calls
+// -----------------------------------------------------
+// LOAN API
+// -----------------------------------------------------
+
 export const loanAPI = {
-  getAll: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiCall(`/loans?${params}`);
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get('/loans', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   },
-  
-  getById: (id) => apiCall(`/loans/${id}`),
-  
-  create: (loanData) =>
-    apiCall('/loans', {
-      method: 'POST',
-      body: loanData,
-    }),
-  
-  updateStatus: (id, status) =>
-    apiCall(`/loans/${id}/status`, {
-      method: 'PUT',
-      body: { status },
-    }),
+
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/loans/${id}`);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  create: async (loanData) => {
+    try {
+      const response = await api.post('/loans', loanData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  updateStatus: async (id, status) => {
+    try {
+      const response = await api.put(`/loans/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
 };
 
-// Repayment API calls
+// -----------------------------------------------------
+// REPAYMENT API
+// -----------------------------------------------------
+
 export const repaymentAPI = {
-  getAll: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiCall(`/repayments?${params}`);
+  // Get repayments, with optional filters and pagination
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get('/repayments', { params });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
   },
-  
-  getTodaysDue: () => apiCall('/repayments/today-due'),
-  
-  getOverdue: () => apiCall('/repayments/overdue'),
-  
-  create: (repaymentData) =>
-    apiCall('/repayments', {
-      method: 'POST',
-      body: repaymentData,
-    }),
-  
-  markAsPaid: (id) =>
-    apiCall(`/repayments/${id}/paid`, {
-      method: 'PUT',
-    }),
-  
-  markMultipleAsPaid: (repaymentIds) =>
-    apiCall('/repayments/bulk/paid', {
-      method: 'PUT',
-      body: { repaymentIds },
-    }),
+
+  // Get today's pending installments
+  getTodaysDue: async () => {
+    try {
+      const response = await api.get('/repayments/today-due');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Get overdue installments
+  getOverdue: async () => {
+    try {
+      const response = await api.get('/repayments/overdue');
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Record the amount actually received
+  create: async (repaymentData) => {
+    try {
+      const response = await api.post('/repayments', repaymentData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Mark a scheduled installment as paid
+  markAsPaid: async (repaymentId) => {
+    try {
+      const response = await api.put(
+        `/repayments/${repaymentId}/paid`
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Mark multiple scheduled installments as paid
+  markMultipleAsPaid: async (repaymentIds) => {
+    try {
+      const response = await api.put('/repayments/bulk/paid', {
+        repaymentIds,
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Edit an existing repayment amount or payment date
+  update: async (repaymentId, repaymentData) => {
+    try {
+      const response = await api.put(
+        `/repayments/${repaymentId}`,
+        repaymentData
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Delete an incorrect repayment
+  delete: async (repaymentId) => {
+    try {
+      const response = await api.delete(
+        `/repayments/${repaymentId}`
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
 };
+
+// Export the Axios instance for other services if needed
+export default api;
